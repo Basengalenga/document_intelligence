@@ -1,0 +1,49 @@
+services:
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  api:
+    build: .
+    image: queue-demo:latest
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8001:8000"
+    environment:
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  worker:
+    build: .
+    image: queue-demo:latest
+    command: celery -A app.tasks.celery_app worker --loglevel=info --concurrency=2
+    environment:
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  # Optional: docker compose --profile monitoring up
+  flower:
+    build: .
+    image: queue-demo:latest
+    command: celery -A app.tasks.celery_app flower --port=5555
+    profiles: ["monitoring"]
+    ports:
+      - "5555:5555"
+    environment:
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      # Local dev only: lets the Flower REST API work without auth.
+      FLOWER_UNAUTHENTICATED_API: 1
+    depends_on:
+      redis:
+        condition: service_healthy
