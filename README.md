@@ -93,16 +93,13 @@ queue-demo/
 ## Exercise: batch text processing with the sentiment model
 
 This project is the starting point. The goal is to reuse the model from
-`../sentiment-api` (`distilbert-base-uncased-finetuned-sst-2-english`)
+`distilbert-base-uncased-finetuned-sst-2-english` 
 so texts can be classified asynchronously in batches:
 
 1. Move the model loading into the worker (e.g. load the HF pipeline once
-   when `tasks.py` is imported, like `sentiment-api/app/main.py` does).
+   when `tasks.py` is imported).
    Only the worker should load the model — the API stays lightweight.
 2. Replace the body of `process_text` with real inference: return
    `{"label": ..., "score": ...}` instead of the word count.
 3. Add a `POST /tasks/batch` endpoint that accepts a **list** of texts and
    enqueues one task per text (or one task for the whole batch — compare!).
-4. Watch the concurrency in Flower: with `--concurrency=2`, how many texts
-   are processed at the same time? What happens if you scale the worker with
-   `docker compose up -d --scale worker=3`?
