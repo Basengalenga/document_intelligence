@@ -36,7 +36,6 @@ services:
     build: .
     image: queue-demo:latest
     command: celery -A app.tasks.celery_app flower --port=5555
-    profiles: ["monitoring"]
     ports:
       - "5555:5555"
     environment:
