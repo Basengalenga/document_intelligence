@@ -41,7 +41,7 @@ def process_document(url: str, original_file_name: str, file_id: str) -> dict:
 
     opendataloader_pdf.convert(
         input_path=[pdf_path],
-        output_dir="output/",
+        output_dir="app/output/",
         format="markdown,json",
         hybrid="docling-fast",     
         hybrid_mode="full",        

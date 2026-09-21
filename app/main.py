@@ -94,8 +94,8 @@ def get_task(task_id: str) -> TaskStatus:
 
 @app.get("/results/{file_id}", response_model=Result)
 def get_result(file_id: str):
-    if f"output/{file_id}.md".is_file():
-        with open(f"output/{file_id}.md", "r", encoding="utf-8") as file:
+    if Path(f"app/output/{file_id}.md").is_file():
+        with open(f"app/output/{file_id}.md", "r", encoding="utf-8") as file:
             text = file.read()
         return Result(message="Your text is available", result=text, status="Available" )
     else:

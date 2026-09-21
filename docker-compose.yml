@@ -81,7 +81,7 @@ services:
 
   hybrid-ocr:
     build: .
-    command: ["opendataloader-pdf-hybrid", "--port", "5002", "--force-ocr", "--hybrid-mode", "full"]
+    command: ["opendataloader-pdf-hybrid", "--port", "5002", "--force-ocr"]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5002/health"]
       interval: 5s
