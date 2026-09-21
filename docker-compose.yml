@@ -12,13 +12,18 @@ services:
     image: queue-demo:latest
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000
     ports:
-      - "8001:8000"
+      - "8000:8000"
     environment:
       CELERY_BROKER_URL: redis://redis:6379/0
-      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: db+postgresql+psycopg2://admin:admin123@postgres:5432/celery
     depends_on:
       redis:
         condition: service_healthy
+      postgres:
+        condition: service_healthy
+    volumes:
+      - bucket:/app/app/bucket
+      - output:/app/app/output
 
   worker:
     build: .
@@ -26,10 +31,19 @@ services:
     command: celery -A app.tasks.celery_app worker --loglevel=info --concurrency=2
     environment:
       CELERY_BROKER_URL: redis://redis:6379/0
-      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: db+postgresql+psycopg2://admin:admin123@postgres:5432/celery
     depends_on:
       redis:
         condition: service_healthy
+      postgres:
+        condition: service_healthy
+      hybrid-ocr:
+        condition: service_healthy
+
+    volumes:
+      - bucket:/app/app/bucket
+      - output:/app/app/output
+    
 
   # Optional: docker compose --profile monitoring up
   flower:
@@ -40,9 +54,43 @@ services:
       - "5555:5555"
     environment:
       CELERY_BROKER_URL: redis://redis:6379/0
-      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: db+postgresql+psycopg2://admin:admin123@postgres:5432/celery
       # Local dev only: lets the Flower REST API work without auth.
       FLOWER_UNAUTHENTICATED_API: 1
     depends_on:
       redis:
         condition: service_healthy
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: celery
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d celery"]
+      interval: 5s
+      retries: 10
+    ports:
+      - "5432:5432"
+
+  hybrid-ocr:
+    build: .
+    command: ["opendataloader-pdf-hybrid", "--port", "5002", "--force-ocr", "--hybrid-mode", "full"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5002/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+
+
+volumes:
+  bucket:
+  postgres_data:
+  output:
