@@ -103,3 +103,4 @@ so texts can be classified asynchronously in batches:
    `{"label": ..., "score": ...}` instead of the word count.
 3. Add a `POST /tasks/batch` endpoint that accepts a **list** of texts and
    enqueues one task per text (or one task for the whole batch — compare!).
+
