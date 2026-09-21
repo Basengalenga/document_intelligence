@@ -55,8 +55,13 @@ def create_task(
 ) -> TaskCreated:
     # 202 Accepted: the work is only queued here, not done yet.
     # The worker picks it up from Redis in the background.
-
-    if file.size > MAX_FILE_SIZE:
+    size = file.size
+    if file.size == None:
+        size = 0
+    else:
+        size = file.size
+        
+    if size > MAX_FILE_SIZE:
         raise HTTPException(status_code=413, detail="The file size is over 10 MB, this API just accept files under 10 MB")
     
     if not file.filename.lower().endswith((".pdf", ".png", ".jpg")):

@@ -19,7 +19,12 @@ celery_app = Celery(
 )
 
 
-@celery_app.task
+@celery_app.task(
+    acks_late=True,
+    autoretry_for=(Exception,),
+    retry_backoff=True,
+    retry_kwargs={"max_retries": 3},
+)
 def process_document(url: str, original_file_name: str, file_id: str) -> dict:
 
     #############################################################333333
