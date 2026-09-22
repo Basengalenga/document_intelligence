@@ -20,6 +20,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY app ./app
 
 RUN useradd --create-home appuser \
+    && mkdir /app/app/bucket /app/app/output \
     && chown -R appuser:appuser /app/app/bucket /app/app/output 
 
 USER appuser
